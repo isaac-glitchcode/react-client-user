@@ -35,6 +35,7 @@ class App extends React.Component {
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
+      background: '#2d2d2d',
       confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
       if(result.value){
@@ -42,10 +43,10 @@ class App extends React.Component {
       }
     })
   }
-  alertSuccess = () => {
+  alertSuccess = (word) => {
     Swal.fire(
-    'Deleted!',
-    'The user has been deleted.',
+     word,
+    'The user has been '+ word +'.',
     'success'
     )
   }
@@ -55,13 +56,14 @@ class App extends React.Component {
         method: 'DELETE'
     })
     .then(() => {
-        this.alertSuccess();
+        this.alertSuccess('Deleted');
         this.getData()
     })
     .catch(error => console.error(error));
   }
 
-  showEditForm = (id) => {
+  editUser = (user) => {
+    const id = user.id;
     this.state.users.filter((user) => {
       if(user.id === id){
         return this.setState({
@@ -78,7 +80,7 @@ class App extends React.Component {
     this.setState({editForm:!this.state.editForm})
   }
 
-  update = (event) => {
+  updateUser = (event) => {
     event.preventDefault();
     const numId = this.state.temporal.id;
     fetch('https://academlo-api-users.herokuapp.com/user/' +numId,{
@@ -89,15 +91,15 @@ class App extends React.Component {
         body: JSON.stringify(this.state.temporal)
     })
     .then(() => {
-        this.alertSuccess();
+        this.alertSuccess('Edited');
         this.getData()
     })
     .catch(error => console.error(error));
     console.log(this.state.users)
-    this.setState({editForm:!this.state.editForm})
+    this.setState({ editForm : !this.state.editForm })
   }
 
-  editInput = event => {
+  handleInputEdit = event => {
     event.preventDefault();
     this.setState({ 
       temporal: {
@@ -124,7 +126,7 @@ class App extends React.Component {
                     <div >
                     <button
                         className="btn btn-primary"
-                        onClick={()=>this.showEditForm(user.id)}
+                        onClick={()=>this.editUser(user)}
                         >
                         Edit
                       </button>
@@ -146,8 +148,8 @@ class App extends React.Component {
         {this.state.editForm === true ? 
         (<EditForm 
         user ={this.state.temporal} 
-        editInput = {this.editInput}
-        updateUser ={this.update}/>) : (<div />)}
+        editInput = {this.handleInputEdit}
+        updateUser ={this.updateUser}/>) : (<div />)}
       </div>
     );
   }
