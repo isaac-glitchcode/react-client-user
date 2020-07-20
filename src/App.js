@@ -3,24 +3,28 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss'
 import './App.css';
 import Form from './components/form';
+import EditForm from './components/editForm';
 
 
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      users:[]
+      users:[],
+      editForm:false,
+      temporal:[]
     };
   }
+
   componentDidMount() {
     this.getData();
   }
+
   getData = () =>{
     fetch("https://academlo-api-users.herokuapp.com/users")
     .then(response => response.json())
     .then(data => this.setState({ users: data.data}))
     .catch(error => console.log(error));
-    console.log(this.state)
   }
 
   alertDelete = id =>{
@@ -38,25 +42,74 @@ class App extends React.Component {
       }
     })
   }
+  alertSuccess = () => {
+    Swal.fire(
+    'Deleted!',
+    'The user has been deleted.',
+    'success'
+    )
+  }
 
   _delete = id => {
     fetch('https://academlo-api-users.herokuapp.com/user/' +id,{
         method: 'DELETE'
     })
     .then(() => {
-        Swal.fire(
-          'Deleted!',
-          'The user has been deleted.',
-          'success'
-        );
+        this.alertSuccess();
+        this.getData()
+    })
+    .catch(error => console.error(error));
+  }
+
+  showEditForm = (id) => {
+    this.state.users.filter((user) => {
+      if(user.id === id){
+        return this.setState({
+          temporal: {
+            id:user.id,
+            name: user.name,
+            lastname:user.lastname,
+            email: user.email,
+            password:user.password
+        }
+      });  
+      }
+    })
+    this.setState({editForm:!this.state.editForm})
+  }
+
+  update = (event) => {
+    event.preventDefault();
+    const numId = this.state.temporal.id;
+    fetch('https://academlo-api-users.herokuapp.com/user/' +numId,{
+        method: 'PUT',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(this.state.temporal)
+    })
+    .then(() => {
+        this.alertSuccess();
         this.getData()
     })
     .catch(error => console.error(error));
     console.log(this.state.users)
+    this.setState({editForm:!this.state.editForm})
   }
 
+  editInput = event => {
+    event.preventDefault();
+    this.setState({ 
+      temporal: {
+        ...this.state.temporal,
+        [event.target.name]: event.target.value 
+      }
+    });
+    console.log(this.state)
+};
+
   render() {
-    console.log(this.state.users)
+    
     const users = this.state.users.map((user)=>{
       return <div className="users col-md-4" key={user.id}> 
                 <div className="card mt-4">
@@ -69,10 +122,15 @@ class App extends React.Component {
                       <div>{user.password}</div>
                     </div>
                     <div >
+                    <button
+                        className="btn btn-primary"
+                        onClick={()=>this.showEditForm(user.id)}
+                        >
+                        Edit
+                      </button>
                       <button
                         className="btn btn-danger"
                         onClick={()=>this.alertDelete(user.id)}>
-                          {console.log(user.id)}
                         Delete
                       </button>
                     </div>
@@ -85,6 +143,11 @@ class App extends React.Component {
       <div className="App">
         <Form getDataFn = {this.getData}/>
         {users}
+        {this.state.editForm === true ? 
+        (<EditForm 
+        user ={this.state.temporal} 
+        editInput = {this.editInput}
+        updateUser ={this.update}/>) : (<div />)}
       </div>
     );
   }

@@ -36,7 +36,7 @@ export default class Form extends Component {
             [event.target.name]: event.target.value 
           }
         });
-        console.log(this.state)
+        // console.log(this.state)
     };
 
     render() {
